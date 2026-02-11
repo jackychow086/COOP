@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COOP | 遠見成就價值</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* 引入繁體與簡體專用字體，確保不同語系渲染一致 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        body { 
+            font-family: 'Noto Sans TC', 'Noto Sans SC', sans-serif; 
+            scroll-behavior: smooth; 
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        @keyframes fadeInBlur {
+            0% { opacity: 0; filter: blur(10px); transform: translateY(10px); }
+            100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+        }
+        .hero-animate {
+            animation: fadeInBlur 1.5s ease-out forwards;
+        }
+
+        /* 針對簡體中文微調字體顯示 */
+        [lang="zh-Hans"] {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-white text-slate-900 selection:bg-blue-100 font-medium">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // --- 翻譯語系定義 ---
+        const i18n = {
+            'zh-Hant': {
+                nav: { about: '關於我們', capabilities: '專業能力', solutions: '服務方案', cases: '成功案例', sectors: '核心領域', contact: '聯繫我們' },
+                hero: { title1: '鏈結頂尖技術', title2: '成就卓越價值', subtitle: '我們不只鏈結資本與資產，更是為每一項改變世界的技術夢想，尋找最佳的商業歸宿。', btn1: '洽談合作計劃', btn2: '核心領域' },
+                about: { tag: 'Who We Are', title: '不僅是投資者 更是「技術與資本」的翻譯官', p1: '我們觀察到一個巨大的市場缺口，許多企業擁有雄厚的資金，卻苦於看不懂複雜的前沿技術；而許多頂尖技術團隊擁有核心壁壘，卻因經營不善面臨資金問題。', p2: '我們作為連結前沿技術與優質資本的橋樑，正是為了填補這個缺口。我們負責搜尋、審計、並發起收購，讓我們的合作夥伴能夠以「大出資、小比例管理」的形式，低成本、高效率地持有技術資產。', feat1: '精準篩選', feat1_p: '全球範圍掃描具備高度收購潛力的技術標的。', feat2: '零運營負擔', feat2_p: '出資方無需建立龐大的研發或營運管理團隊。' },
+                value: { 
+                    tag: 'Partner Value', title: '這場合作將為您帶來什麼樣的價值？', subtitle: '我們將複雜的技術收購轉化為具備確定性的資產增值路徑。',
+                    v1_t: '獲取稀缺案源', v1_d: '深入全球頂尖研發機構與實驗室網路，獲取尚未進入公開市場的早期硬核技術標的，讓合作夥伴擁有領先市場的投資眼界。',
+                    v2_t: '深度技術避險', v2_d: '由我們團隊主導深度審計，排除技術偽裝、專利瑕疵與商業化瓶頸，確保資本準確地投向核心資產。',
+                    v4_t: '戰略競爭壁壘', v4_d: '協助合作夥伴快速獲取領先產業的跨代技術優勢，透過專利佈局與技術重塑，建立在所屬行業中難以被超越的競爭地位。'
+                },
+                cap: { tag: 'Our Capabilities', title: '為什麼選擇 COOP 實現您的願景？', subtitle: '我們擁有的不只是網絡，更是將技術轉化為資產價值的系統性能力。', c1: '標的探勘與深度技術審計', c1_p: '我們是深入實驗室底層審核標的的「真實護城河」。不僅關注專利數量，更探索技術在未來 5-10 年的不可替代性。', c2: '技術資產包裝與價值重塑', c2_p: '許多具備潛力的標的因缺乏商業敘事而價值被低估。我們負責將深奧的技術轉化為具備「商業確定性」的資產包。透過定義多元應用場景，為標的重塑價值空間。', c3: '戰略合資架構與長期資產監管', c3_p: '我們主導嚴謹的 JV 合資框架設定與技術里程碑監控。透過 SPV 隔離以及對研發進度的督導，為出資方建立了一套安全的資產防火牆。' },
+                sol: { tag: 'What We Do For You', title: '從專利到收益，實現您最具前瞻性的商業野心', subtitle: '我們提供的不之後不只是資本對接，更是確保目標達成的專業體系。', s1: '商業策略建議', s1_p: '我們以結果為導向。無論您的目標是跨代競爭優勢，我們都根據您的最終目標反推執行路徑，為您制定精準的戰略建議。', s2: '核心競爭力', s2_p: '我們會在全球範圍內搜羅硬核技術為您鎖定核心專利，建立絕對的市場優勢。', s3: '企業策略與行銷', s3_p: '協助買方注入市場生命力。透過戰略重塑與全球佈局，為技術創造難以被取代的溢價空間。' },
+                cases: { tag: 'Case Studies', title: '從策略到落地：我們的成功印記', v_type: '戰略收購案例', v_title: 'Project V：引領城市物流平台化的戰略重組', v_p: '此專案主導了全球領先電動技術平台的產權重組。推動其從單一整車製造轉型為高利潤的技術方案交付商。', v_exp: 'COOP 深度價值體現：', v_i1_h: '資本路徑優化：', v_i1_d: '透過資本重組模式鎖定成熟技術平台，實現資本效率提升。', v_i2_h: '供應鏈整合：', v_i2_d: '導入高效供應體系，推動產品轉向高獲利的綜合服務平台.', v_i3_h: '技術產權保障：', v_i3_d: '主導跨境數據保全，確保技術權益在重組過程中實現技術權益的絕對隔離與安全。', g_type: '技術擴張案例', g_title: 'Project G：硬核物流技術的全球溢價', g_p: '作為智慧倉儲物流的領航標的，該項目擁有核心的「多維穿梭車」專利技術。在面臨全球市場擴張挑戰時，我們鎖定了其技術在亞太與中東市場的戰略管線價值。', g_exp: 'COOP 深度價值體現：', g_i1_h: '精準盡調：', g_i1_d: '嚴格審計技術專利壁壘，確保收購標的具備全球競爭優勢。', g_i2_h: '預見性營銷：', g_i2_d: '提前對接下游零售與電商巨頭，鎖定收購後的訂單流。', g_i3_h: '風險管理：', g_i3_d: '深度評估跨國市場風險，制定技術路徑備案，確保核心價值。' },
+                sectors: { tag: 'Sectors Focus', title: '驅動未來的硬核技術矩陣', btn: '查看技術實證與來源數據', s1: '新能源與儲能', s1_t: ['鈣鈦礦光伏', '全固態電池'], s2: '氫能物流與航空', s2_t: ['氫能模組化膠囊', '支線航空動力'], s3: '先進製造', s3_t: ['卷對卷 (R2R)'], detail_title: '全球前沿硬核技術矩陣', back: '回到首頁', value_core: '併購價值核心', source: '數據來源' },
+                contact: { title: '啟動您的 全球技術收購計劃', p: '無論您是尋求技術轉型的大型企業，還是尋求資本配置的專業投資者，COOP 則是您的首選戰略夥伴。', name: '您的姓名 / 職稱', email: '公司電子郵件', req: '合作需求', placeholder: '請簡述您的收購目標或資金規模...', submit: '提交諮詢預約', submitting: '正在安全傳輸...', success_title: '預約成功', success_p: '感謝您的預約。我們的戰略分析師將會盡快聯繫您。', back_btn: '回到首頁' },
+                footer: { rights: '© 2026 COOP (CHINA) HOLDINGS LIMITED. ALL RIGHTS RESERVED.', addr: '香港觀塘道336號KT336, 5樓' }
+            },
+            'zh-Hans': {
+                nav: { about: '关于我们', capabilities: '专业能力', solutions: '服务方案', cases: '成功案例', sectors: '核心领域', contact: '联系我们' },
+                hero: { title1: '链接顶尖技术', title2: '成就卓越价值', subtitle: '我们不只链接资本与资产，更是为每一项改变世界的技术梦想，寻找最佳的商业归宿。', btn1: '洽谈合作计划', btn2: '核心领域' },
+                about: { tag: 'Who We Are', title: '不仅是投资者 更是「技术与资本」的翻译官', p1: '我们观察到一个巨大的市场缺口，许多企业拥有雄厚的资金，却苦于看不懂复杂的前沿技术；而许多顶尖技术团队拥有核心壁垒，却因经营不善面临资金问题。', p2: '我们作为连接前沿技术与优质资本的桥梁，正是为了填补这个缺口。我们负责搜寻、审计、并发起收购，让我们的合作伙伴能够以「大出资、小比例管理」的形式，低成本、高效率地持有技术资产。', feat1: '精准筛选', feat1_p: '全球范围扫描具备高度收购潜力的技术标的。', feat2: '零运营负担', feat2_p: '出资方无需建立庞大的研发或运营管理团队。' },
+                value: { 
+                    tag: 'Partner Value', title: '这场合作将为您带来什么样的价值？', subtitle: '我们将复杂的跨国技术收购流程转化为具备确定性的资产增值路径。',
+                    v1_t: '获取稀缺案源', v1_d: '深入全球顶尖研发机构与实验室网络，获取尚未进入公开市场的早期硬核技术标的，让合作伙伴拥有领先市场的投资眼界。',
+                    v2_t: '深度技术避险', v2_d: '由我们团队主导深度审计，排除技术伪装、专利瑕疵与商业化瓶颈，确保资本准确地投向核心资产。',
+                    v4_t: '战略竞争壁垒', v4_d: '协助合作伙伴快速获取领先产业的跨代技术优势，通过专利布局与技术重塑，建立在所属行业中难以被超越的竞争地位。'
+                },
+                cap: { tag: 'Our Capabilities', title: '为什么选择 COOP 实现您的愿景？', subtitle: '我们拥有的不只是网络，更是将技术转化为资产价值的系统性能力。', c1: '标的探勘与深度技术审计', c1_p: '我们是深入实验室底层审核标的的「真实护城河」。不仅关注专利数量，更探索技术在未来 5-10 年不可替代性。', c2: '技术资产包装与价值重塑', c2_p: '许多具备潜力标的因缺乏商业叙事而价值被低估。我们负责将深奥的技术转化为具备「商业确定性」的资产包。通过定义多元应用场景，为标的重塑价值空间。', c3: '战略合资架构与长期资产监管', c3_p: '我们主导严谨的 JV 合资框架设定与技术里程碑监控。通过 SPV 隔离以及对研发进度的督导，为出资方建立了一套安全的资产防火墙。' },
+                sol: { tag: 'What We Do For You', title: '从专利到收益，实现您最具前瞻性的商业野心', subtitle: '我们提供的不仅是资本对接，更是确保目标达成的专业体系。', s1: '商业策略建议', s1_p: '我们以结果为导向。无论您的目标是跨代竞争优势，我们都根据您的最终目标反推执行路径，为您制定精准的战略建议。', s2: '核心竞争力', s2_p: '我们会在全球范围内搜罗硬核技术为您锁定核心专利，建立绝对的市场优势。', s3: '企业策略与营销', s3_p: '协助买方注入市场生命力。通过战略重塑与全球布局，为技术创造难以被取代的溢价空间。' },
+                cases: { tag: 'Case Studies', title: '从策略到落地：我们的成功印记', v_type: '战略收购案例', v_title: 'Project V: 引领城市物流平台化的战略重组', v_p: '此项目主导了全球领先电动技术平台的产权重组。推动其从单一整车制造转型为高利润的技术方案交付商。', v_exp: 'COOP 深度价值体现：', v_i1_h: '资本路径优化：', v_i1_d: '通过资本重组模式锁定成熟技术平台，实现资本效率提升。', v_i2_h: '供应链整合：', v_i2_d: '导入高效供应体系，推动产品转向高获利的综合服务平台.', v_i3_h: '技术产权保障：', v_i3_d: '主導跨境數據保全，確保技術權益在重組過程中實現技術權益的絕對隔離與安全。', g_type: '技术扩张案例', g_title: 'Project G: 硬核物流技术的全球溢价', g_p: '作为智慧仓储物流的领航标的，该项目拥有核心的「多维穿梭车」专利技术。在面临全球市场扩张挑战时，我们锁定了其技术在亚太与中东市场的战略管线价值。', g_exp: 'COOP 深度价值体现：', g_i1_h: '精准尽调：', g_i1_d: '严格审计技术专利壁垒，确保收购标制具备全球竞争优势。', g_i2_h: '预见性营销：', g_i2_d: '提前对接下游零售与电商巨头，锁定收购后的订单流。', g_i3_h: '风险管理：', g_i3_d: '深度评估跨国市场风险，制定技术路径备案，确保核心价值。' },
+                sectors: { tag: 'Sectors Focus', title: '驱动未来的硬核技术矩阵', btn: '查看技术实证与来源数据', s1: '新能源与储能', s1_t: ['钙钛矿光伏', '全固态电池'], s2: '氢能物流与航空', s2_t: ['氢能模块化胶囊', '支线航空动力'], s3: '先进制造', s3_t: ['卷对卷 (R2R)'], detail_title: '全球前沿硬核技术矩阵', back: '回到首页', value_core: '并购价值核心', source: '数据来源' },
+                contact: { title: '启动您的 全球技术收购计划', p: '无论您是寻求技术转型的大型企业，还是寻求资本配置的专业投资者，COOP 則是您的首选战略伙伴。', name: '您的姓名 / 职称', email: '公司电子邮件', req: '合作需求', placeholder: '请简述您的收购目标或资金规模...', submit: '提交咨询预约', submitting: '正在安全传输...', success_title: '预约成功', success_p: '感谢您的预约。我们的战略分析师将会尽快联系您。', back_btn: '回到首页' },
+                footer: { rights: '© 2026 COOP (CHINA) HOLDINGS LIMITED. ALL RIGHTS RESERVED.', addr: '香港观塘道336号KT336, 5楼' }
+            },
+            'en': {
+                nav: { about: 'About', capabilities: 'Capabilities', solutions: 'Solutions', cases: 'Cases', sectors: 'Sectors', contact: 'Contact' },
+                hero: { title1: 'Connecting to cutting-edge technology', title2: 'Achieving exceptional value', subtitle: 'We don’t just link capital with assets; we find the best commercial home for every world-changing technological dream.', btn1: 'Start Cooperation', btn2: 'Core Sectors' },
+                about: { tag: 'Who We Are', title: 'More Than Investors - We Translate Tech to Capital', p1: 'We identified a massive market gap: many corporations have capital but struggle to understand complex frontier tech; while elite tech teams have core assets but face insolvency due to poor management.', p2: 'We exist to bridge this gap. We source, audit, and initiate acquisitions, allowing partners to hold tech assets through an "investment-heavy, management-light" model.', feat1: 'Precise Sourcing', feat1_p: 'Global scanning for tech targets with high acquisition potential.', feat2: 'Zero Operational Burden', feat2_p: 'No need for investors to build massive R&D or ops teams.' },
+                value: { 
+                    tag: 'Partner Value', title: 'What value will this partnership bring you?', subtitle: 'We transform complex tech acquisitions into a predictable path for asset value growth.',
+                    v1_t: 'Exclusive Deal Flow', v1_d: 'Deeply tap into global top R&D institutions and lab networks to acquire early hard-core tech targets before they hit the open market, providing partners with leading investment vision.',
+                    v2_t: 'Strategic De-risking', v2_d: 'Led by our team to conduct deep audits, eliminating technical camouflage, patent defects, and commercialization bottlenecks, ensuring capital is accurately invested in core assets.',
+                    v4_t: 'Strategic Competitive Barrier', v4_d: 'Assist partners in rapidly acquiring cross-generational technological advantages in leading industries, establishing an unsurpassable competitive position through patent layout and technological reshaping.'
+                },
+                cap: { tag: 'Our Capabilities', title: 'Why Choose COOP for Your Vision?', subtitle: 'We possess more than just a network; we have the systematic ability to turn tech into asset value.', c1: 'Target Sourcing & Tech Audit', c1_p: 'We go deep into labs to verify the "real moat." We look beyond patents to assess irreplaceable tech over the next 5-10 years.', c2: 'Asset Packaging & Value Reshaping', c2_p: 'Promising targets often undervalued due to lack of narrative. We translate complex tech into commercial certainty.', c3: 'JV Structure & Asset Monitoring', c3_p: 'We lead rigorous JV framework setting and milestone tracking. SPVs provide a secure firewall for investors.' },
+                sol: { tag: 'What We Do For You', title: 'From Patent to Profit: Realize Your Ambition', subtitle: 'We provide more than capital matching; we offer a professional system for goal achievement.', s1: 'Strategic Advisory', s1_p: 'Results-driven. Whether your goal is generational advantage or energy sovereignty, we reverse-engineer the execution path.', s2: 'Core Competitiveness', s2_p: 'Global sourcing of hard-core tech to lock in core patents for absolute market advantage.', s3: 'Corporate Strategy & Marketing', s3_p: 'Injecting market vitality. Strategic reshaping creates irreplaceable premium space for technology.' },
+                cases: { tag: 'Case Studies', title: 'From Strategy to Execution', v_type: 'Strategic Acquisition', v_title: 'Project V: Leading Urban Logistics Transformation', v_p: 'Led the restructuring of a global electric tech platform from vehicle manufacturing to high-margin tech delivery.', v_exp: 'COOP Value Delivery:', v_i1_h: 'Capital Path Optimization: ', v_i1_d: 'Locking in mature platforms via capital restructuring.', v_i2_h: 'Supply Chain Integration: ', v_i2_d: 'Introducing efficient systems for comprehensive service.', v_i3_h: 'IP Security: ', v_i3_d: 'Leading cross-border data protection to ensure asset integrity.', g_type: 'Tech Expansion', g_title: 'Project G: Global Premium for Hard-Core Logistics Tech', g_p: 'A leader in warehouse logistics with "Multi-dimensional Shuttle" patents. We locked in strategic value for Asia-Pacific and MENA markets.', g_exp: 'COOP Value Delivery:', g_i1_h: 'Precise DD: ', g_i1_d: 'Auditing tech barriers for global competitive advantage.', g_i2_h: 'Predictive Marketing: ', g_i2_d: 'Connecting downstream retail giants for future order flow.', g_i3_h: 'Risk Management: ', g_i3_d: 'Assessing cross-border risks and technical path contingencies.' },
+                sectors: { tag: 'Sectors Focus', title: 'Hard-Core Tech Driving the Future', btn: 'View Evidence & Sources', s1: 'New Energy & Storage', s1_t: ['Perovskite PV', 'Solid-State Battery'], s2: 'Hydrogen Logistics & Aero', s2_t: ['Modular hydrogen capsules', 'Regional Aero Power'], s3: 'Advanced Manufacturing', s3_t: ['Roll-to-Roll (R2R)'], detail_title: 'Global Frontier Tech Matrix', back: 'Home', value_core: 'M&A Value Core', source: 'Data Sources' },
+                contact: { title: 'Start Your Global Acquisition', p: 'Whether you are a corporation seeking transformation or an investor seeking capital allocation, COOP is your partner.', name: 'Name / Title', email: 'Work Email', req: 'Requirement', placeholder: 'Briefly describe your acquisition target or fund size...', submit: 'Book Consultation', submitting: 'Securing Transmission...', success_title: 'Success', success_p: 'Thank you. Our strategic analysts will contact you shortly.', back_btn: 'Back to Home' },
+                footer: { rights: '© 2026 COOP (CHINA) HOLDINGS LIMITED. ALL RIGHTS RESERVED.', addr: '5F, KT336, 336 Kwun Tong Road, Hong Kong' }
+            }
+        };
+
+        const App = () => {
+            const [scrolled, setScrolled] = useState(false);
+            const [currentPage, setCurrentPage] = useState('home');
+            const [lang, setLang] = useState('zh-Hant');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [isSubmitted, setIsSubmitted] = useState(false);
+            const [errorStatus, setErrorStatus] = useState(null);
+            const [formData, setFormData] = useState({ name: '', email: '', requirement: '' });
+
+            const t = i18n[lang];
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, [lang, currentPage]);
+
+            useEffect(() => {
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+
+            const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+            const scrollToSection = (id) => {
+                const element = document.getElementById(id);
+                if (element) element.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            const handleFormSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                setErrorStatus(null);
+                try {
+                    const response = await fetch("https://formspree.io/f/mkoozgzk", {
+                        method: "POST",
+                        body: JSON.stringify({ ...formData, "Language": lang }),
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                    });
+                    if (response.ok) {
+                        setIsSubmitting(false);
+                        setIsSubmitted(true);
+                        setFormData({ name: '', email: '', requirement: '' });
+                    } else { throw new Error("Failed"); }
+                } catch (error) {
+                    setIsSubmitting(false);
+                    setErrorStatus(lang === 'en' ? "Failed to send. Please email info@coop-china.com" : "發送失敗，請直接聯繫 info@coop-china.com");
+                }
+            };
+
+            const HomePage = () => (
+                <div className="animate-in fade-in duration-700 text-left">
+                    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-slate-900 text-center text-white">
+                        <div className="absolute inset-0 z-0 opacity-40">
+                            <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000" className="w-full h-full object-cover scale-105" alt="Futuristic High Tech Background" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/40 to-slate-950/95 z-10"></div>
+                        <div className="relative z-20 max-w-5xl mx-auto px-6">
+                            <h1 className="text-4xl md:text-7xl font-black mb-8 leading-tight tracking-tighter hero-animate">
+                                {t.hero.title1} <br /> 
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">{t.hero.title2}</span>
+                            </h1>
+                            <p className="text-lg md:text-2xl text-slate-300 mb-12 max-w-3xl mx-auto font-medium opacity-90 leading-relaxed hero-animate">
+                                {t.hero.subtitle}
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center hero-animate" style={{ animationDelay: '0.6s' }}>
+                                <button onClick={() => scrollToSection('contact')} className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-blue-500/30">{t.hero.btn1} <i data-lucide="arrow-right" className="w-5 h-5"></i></button>
+                                <button onClick={() => scrollToSection('sectors-home')} className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-8 py-4 rounded-2xl font-black text-lg hover:bg-white/20 transition-all">{t.hero.btn2}</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="about" className="py-20 bg-white border-b border-slate-50 text-left text-slate-900">
+                        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+                            <div>
+                                <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">{t.about.tag}</h2>
+                                <h3 className="text-3xl md:text-4xl font-black mb-8 leading-tight">{t.about.title}</h3>
+                                <div className="space-y-6 text-slate-600 text-lg leading-relaxed font-medium">
+                                    <p>{t.about.p1}</p>
+                                    <p>{t.about.p2}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 hover:shadow-xl transition-all">
+                                    <div className="text-blue-600 mb-4 text-left"><i data-lucide="target" className="w-8 h-8"></i></div>
+                                    <h4 className="text-lg font-black mb-2">{t.about.feat1}</h4>
+                                    <p className="text-slate-400 text-xs font-bold">{t.about.feat1_p}</p>
+                                </div>
+                                <div className="bg-blue-600 p-6 rounded-[2rem] text-white shadow-xl shadow-blue-100">
+                                    <div className="text-blue-200 mb-4 text-left font-black"><i data-lucide="shield-check" className="w-8 h-8"></i></div>
+                                    <h4 className="text-lg font-black mb-2">{t.about.feat2}</h4>
+                                    <p className="text-blue-100 text-xs font-bold">{t.about.feat2_p}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="partner-value" className="py-20 bg-slate-50 text-left text-slate-900">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="mb-12">
+                                <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">{t.value.tag}</h2>
+                                <h3 className="text-3xl md:text-4xl font-black mb-4 leading-tight">{t.value.title}</h3>
+                                <p className="text-slate-500 font-medium text-lg">{t.value.subtitle}</p>
+                            </div>
+                            <div className="grid sm:grid-cols-3 gap-6">
+                                {[
+                                    { icon: "zap", title: t.value.v1_t, desc: t.value.v1_d },
+                                    { icon: "search", title: t.value.v2_t, desc: t.value.v2_d },
+                                    { icon: "award", title: t.value.v4_t, desc: t.value.v4_d }
+                                ].map((item, idx) => (
+                                    <div key={idx} className="bg-white p-6 rounded-[2rem] border border-slate-100 hover:shadow-lg transition-all flex flex-col h-full">
+                                        <div className="text-blue-600 mb-4 text-left"><i data-lucide={item.icon} className="w-8 h-8"></i></div>
+                                        <h4 className="text-lg font-black mb-3">{item.title}</h4>
+                                        <p className="text-slate-500 text-sm leading-relaxed font-medium">{item.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="capabilities" className="py-20 bg-white overflow-hidden text-left text-slate-900">
+                        <div className="max-w-7xl mx-auto px-6 text-center mb-16">
+                            <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-center font-black">{t.cap.tag}</h2>
+                            <h3 className="text-3xl md:text-4xl font-black mb-6 text-center">{t.cap.title}</h3>
+                            <p className="text-slate-500 font-medium max-w-2xl mx-auto leading-relaxed text-center">{t.cap.subtitle}</p>
+                        </div>
+                        <div className="max-w-7xl mx-auto px-6 space-y-12">
+                            <div className="grid md:grid-cols-2 gap-10 items-center">
+                                <div className="order-2 md:order-1 text-left">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-black">01</div>
+                                        <h4 className="text-xl font-black uppercase text-left">{t.cap.c1}</h4>
+                                    </div>
+                                    <p className="text-slate-600 font-medium leading-relaxed mb-6 text-left">{t.cap.c1_p}</p>
+                                </div>
+                                <div className="order-1 md:order-2 rounded-[2rem] overflow-hidden shadow-xl h-64 md:h-80">
+                                    <img src="https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover" alt="Audit" />
+                                </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-10 items-center">
+                                <div className="rounded-[2rem] overflow-hidden shadow-xl h-64 md:h-80"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover" alt="Assets" /></div>
+                                <div className="text-left">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-black">02</div>
+                                        <h4 className="text-xl font-black uppercase text-left">{t.cap.c2}</h4>
+                                    </div>
+                                    <p className="text-slate-600 font-medium leading-relaxed mb-6">{t.cap.c2_p}</p>
+                                </div>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-10 items-center text-left">
+                                <div>
+                                    <div className="flex items-center gap-4 mb-4 text-left">
+                                        <div className="bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-black text-center text-white">03</div>
+                                        <h4 className="text-2xl font-black uppercase text-slate-900 text-left">{t.cap.c3}</h4>
+                                    </div>
+                                    <p className="text-slate-600 font-medium leading-relaxed mb-6">{t.cap.c3_p}</p>
+                                </div>
+                                <div className="rounded-[2rem] overflow-hidden shadow-2xl h-64 md:h-80"><img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1200" className="w-full h-full object-cover" alt="Monitoring" /></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="solutions" className="py-20 bg-slate-50 text-left text-slate-900">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+                                <div className="max-w-2xl text-left">
+                                    <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-left">{t.sol.tag}</h2>
+                                    <h3 className="text-3xl md:text-4xl font-black leading-tight">{t.sol.title}</h3>
+                                </div>
+                                <p className="text-slate-500 font-medium max-w-sm">{t.sol.subtitle}</p>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-6 text-left">
+                                <div className="bg-blue-600 p-8 rounded-[2rem] text-white shadow-xl md:col-span-2 relative overflow-hidden group hover:scale-[1.005] transition-all mb-4 text-left">
+                                    <i data-lucide="award" className="absolute -right-8 -bottom-8 w-64 h-64 text-white/10 rotate-12 text-left"></i>
+                                    <div className="relative z-10 text-left text-white">
+                                        <h4 className="text-2xl font-black mb-4 uppercase tracking-tighter text-left">{t.sol.s1}</h4>
+                                        <p className="text-blue-50 text-sm leading-relaxed mb-4 font-medium max-w-3xl text-left">{t.sol.s1_p}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-8 rounded-[2rem] border border-slate-100 hover:shadow-2xl transition-all group text-left">
+                                    <h4 className="text-xl font-black mb-4">{t.sol.s2}</h4>
+                                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{t.sol.s2_p}</p>
+                                </div>
+                                <div className="bg-white p-8 rounded-[2rem] border border-slate-100 hover:shadow-2xl transition-all group text-left">
+                                    <h4 className="text-xl font-black mb-4">{t.sol.s3}</h4>
+                                    <p className="text-slate-500 text-sm leading-relaxed font-medium">{t.sol.s3_p}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="cases" className="py-20 bg-white text-left border-t border-slate-50 font-black">
+                        <div className="max-w-7xl mx-auto px-6 text-center mb-16">
+                            <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-center font-black">{t.cases.tag}</h2>
+                            <h3 className="text-3xl md:text-4xl font-black text-center">{t.cases.title}</h3>
+                        </div>
+                        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 text-left text-slate-900">
+                            <div className="bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:shadow-xl transition-all p-8 md:p-12 text-left font-black">
+                                <div className="flex items-center gap-3 mb-6 font-black">
+                                    <span className="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px] uppercase text-center font-black">{t.cases.v_type}</span>
+                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest text-left font-black">Project V / Electric Logistics</span>
+                                </div>
+                                <h4 className="text-2xl md:text-3xl font-black mb-6 text-slate-900 text-left font-black">{t.cases.v_title}</h4>
+                                <div className="space-y-6 text-slate-600 leading-relaxed font-medium text-left">
+                                    <p className="text-slate-600 font-medium">{t.cases.v_p}</p>
+                                    <div className="bg-white/60 p-6 rounded-2xl border border-blue-100 text-left">
+                                        <h5 className="text-blue-600 font-black text-sm mb-2 text-left">{t.cases.v_exp}</h5>
+                                        <ul className="text-xs space-y-3 list-disc pl-4 text-slate-500 font-medium">
+                                            <li><span className="text-slate-600 font-medium">{t.cases.v_i1_h}</span> {t.cases.v_i1_d}</li>
+                                            <li><span className="text-slate-600 font-medium">{t.cases.v_i2_h}</span> {t.cases.v_i2_d}</li>
+                                            <li><span className="text-slate-600 font-medium">{t.cases.v_i3_h}</span> {t.cases.v_i3_d}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:shadow-xl transition-all p-8 md:p-12 text-left text-slate-900 font-black">
+                                <div className="flex items-center gap-3 mb-6 text-left font-black">
+                                    <span className="bg-indigo-600 text-white px-3 py-1 rounded-lg text-[10px] uppercase tracking-widest text-center font-black">{t.cases.g_type}</span>
+                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest text-left font-black">Project G / Robotics AI</span>
+                                </div>
+                                <h4 className="text-2xl md:text-3xl font-black mb-6 text-slate-900 text-left font-black">{t.cases.g_title}</h4>
+                                <div className="space-y-6 text-slate-600 leading-relaxed font-medium text-left">
+                                    <p className="text-left font-medium text-slate-600">{t.cases.g_p}</p>
+                                    <div className="bg-white/60 p-6 rounded-2xl border border-indigo-100 text-left">
+                                        <h5 className="text-indigo-600 font-black text-sm mb-2 text-left font-black">{t.cases.g_exp}</h5>
+                                        <ul className="text-xs space-y-2 list-disc pl-4 text-slate-500 font-medium">
+                                            <li><span className="text-slate-600 font-medium">{t.cases.g_i1_h}</span> {t.cases.g_i1_d}</li>
+                                            <li><span className="text-slate-600 font-medium">{t.cases.g_i2_h}</span> {t.cases.g_i2_d}</li>
+                                            <li><span className="text-slate-600 font-medium">{t.cases.g_i3_h}</span> {t.cases.g_i3_d}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="sectors-home" className="py-24 bg-slate-50 text-left">
+                        <div className="max-w-7xl mx-auto px-6 text-left">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 text-slate-900">
+                                <div className="max-w-xl text-left font-black">
+                                    <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4 text-left text-blue-600">{t.sectors.tag}</h2>
+                                    <h3 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">{t.sectors.title}</h3>
+                                </div>
+                                <button onClick={() => { setCurrentPage('sectors'); scrollToTop(); }} className="text-blue-600 font-black flex items-center gap-2 hover:gap-4 transition-all text-left">
+                                    {t.sectors.btn} <i data-lucide="chevron-right" className="w-5 h-5 font-black"></i>
+                                </button>
+                            </div>
+                            <div className="grid md:grid-cols-3 gap-6 text-left font-black">
+                                {[
+                                    { icon: "layers", name: t.sectors.s1, tags: t.sectors.s1_t },
+                                    { icon: "briefcase", name: t.sectors.s2, tags: t.sectors.s2_t },
+                                    { icon: "factory", name: t.sectors.s3, tags: t.sectors.s3_t }
+                                ].map((s, i) => (
+                                    <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 hover:border-blue-600 transition-all flex flex-col items-start text-left font-black">
+                                        <div className="text-blue-600 mb-6 text-left font-black"><i data-lucide={s.icon} className="w-10 h-10 font-black text-blue-600"></i></div>
+                                        <h4 className="text-xl font-black mb-4 text-left font-black">{s.name}</h4>
+                                        <div className="flex flex-wrap gap-2 text-left text-slate-400 font-black">
+                                            {s.tags.map((tag, ti) => (
+                                                <span key={ti} className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-50 px-2 py-1 rounded-md font-black">{tag}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            );
+
+            const SectorsPage = () => {
+                const techList = [
+                    { title: t.sectors.s1_t[0], desc: lang === 'en' ? "Perovskite tandem cells are at a critical tipping point for industrialization. According to NREL 2025 records, lab efficiency has exceeded 34%, far surpassing the theoretical limit of single-crystal silicon. This will fundamentally rewrite global energy costs." : (lang === 'zh-Hans' ? "钙钛矿叠层电池正处于工业化转型的关键期。根据 2025 年 NREL 最新纪录，其实验室效率已突破 34%, 远超单晶硅理论极限。这将彻底改写全球能源获取成本。" : "鈣鈦礦疊層電池正處於工業化轉型的關鍵期。根據 2025 年 NREL 最新紀錄，其實驗室效率已突破 34%, 遠超單晶矽理論極限。這將徹底改寫全球能源獲取成本。"), sources: [{ label: "NREL Global PV Efficiency Chart", url: "https://www.nrel.gov/pv/cell-efficiency" }], color: "bg-blue-600", points: lang === 'en' ? ["Over 30% tandem efficiency potential", "Flexible modules for all scenarios", "Team with large-area film stability"] : ["超過 30% 的疊層效率商業化潛力", "柔性組件開啟「全場景發電」市場", "具備大面積穩定成膜技術團隊"] },
+                    { title: t.sectors.s1_t[1], desc: lang === 'en' ? "Discarding flammable electrolytes, solid-state batteries are the 'ultimate solution' for transportation electrification. Authoritative data shows energy density can reach 500 Wh/kg, double current tech, solving safety pain points." : (lang === 'zh-Hans' ? "舍弃易燃电解质，固态电池是交通电气化的「最终解答」。权威数据显示其能量密度可达 500 Wh/kg，是现有技术的 2 倍，且彻底解决安全性痛点。" : "捨棄易燃電解質，固態電池是交通電氣化的「最終解答」。權威數據顯示其能量密度可達 500 Wh/kg，是現有技術的 2 倍，且徹底解決安全性痛點。"), sources: [{ label: "QuantumScape White Paper", url: "https://www.quantumscape.com/technology/" }], color: "bg-slate-900", points: lang === 'en' ? ["Fast charge (80% in 15 mins)", "Inherent safety with zero thermal runaway", "Patent targets with solid-interface tech"] : ["極速快充（15分鐘內至 80%）", "本質安全架構，無熱失控風險", "擁有固-固界面處理技術之專利標的"] },
+                    { title: t.sectors.s3_t[0], desc: lang === 'en' ? "R2R is the shared technical foundation for scaling and commoditizing all new materials. Producing batteries and displays like printing newspapers is the crown jewel of Industry 4.0." : (lang === 'zh-Hans' ? "R2R 是实现上述所有新材料规模化、平民化的共同技术底层。像印刷报纸一样生产电池与显示器，是工业 4.0 的核心皇冠。" : "R2R 是實現上述所有新材料規模化、平民化的共同技術底層。像印刷報紙一樣生產電池與顯示器，是工業 4.0 的核心皇冠。"), sources: [{ label: "VTT Printed Electronics & R2R", url: "https://www.vttresearch.com/en/ourservices/printed-electronics" }, { label: "AIMCAL Global Standards", url: "https://www.rolltoroll.org/" }], color: "bg-indigo-600", points: lang === 'en' ? ["Nano-precision coating & tension control", "Production costs reduced by 40-60%", "Equipment suppliers with tension control patents"] : ["納米級精度塗佈控制與超薄基材張力技術", "生產成本相較傳統工藝降低 40-60%", "掌握高精度張力控制與多層共擠技術的設備商"] },
+                    { title: t.sectors.s2_t[0], desc: lang === 'en' ? "Modular hydrogen capsules solve the pain point of astronomical infrastructure costs. According to IEA, modular distribution will be the most economical path for de-carbonizing long-haul logistics and aviation." : (lang === 'zh-Hans' ? "氢能模块化胶囊技术解决了基础设施天价成本的痛点。根据 IEA 全球氢能评论，模块化分发将是长途物流与支线航空去碳化的最经济路径。" : "氫能模組化膠囊技術解決了基礎設施天價成本的痛點。根據 IEA 全球氫能評論，模組化分發將是長途物流與支線航空去碳化的最經濟路徑。"), sources: [{ label: "IEA Global Hydrogen Review 2024", url: "https://www.iea.org/reports/global-hydrogen-review-2024" }], color: "bg-emerald-600", points: lang === 'en' ? ["Avoid high-cost stations using logistics nets", "Premium for regional aero conversion kits", "Lightweight power integration tech"] : ["避開高成本加氫站，利用現有物流網配送", "支線航空改裝套件帶來的技術溢價", "模組化儲運膠囊及輕量化動力整合技術"] }
+                ];
+                return (
+                    <div className="animate-in slide-in-from-right duration-700 pb-24 text-left font-black text-slate-900">
+                        <section className="bg-slate-900 pt-32 pb-20 text-white text-left font-black">
+                            <div className="max-w-7xl mx-auto px-6 text-left text-white font-black">
+                                <button onClick={() => { setCurrentPage('home'); scrollToTop(); }} className="flex items-center gap-2 text-blue-400 font-bold mb-8 hover:text-blue-300 transition-colors uppercase tracking-widest text-xs font-black">
+                                    <i data-lucide="arrow-left" className="w-4 h-4 text-left"></i> {t.sectors.back}
+                                </button>
+                                <h1 className="text-3xl md:text-6xl font-black mb-6 leading-tight uppercase font-black text-left text-white">{t.sectors.detail_title}</h1>
+                            </div>
+                        </section>
+                        <section className="py-20 bg-white font-black text-slate-900 text-left font-black">
+                            <div className="max-w-7xl mx-auto px-6 space-y-32 font-black">
+                                {techList.map((tech, idx) => (
+                                    <div key={idx} className="grid md:grid-cols-12 gap-12 border-b border-slate-50 pb-20 last:border-0 font-black">
+                                        <div className="md:col-span-8 font-black text-slate-900 font-black">
+                                            <div className="flex items-center gap-3 mb-6 font-black text-blue-600 font-black text-left">
+                                                <div className="h-10 w-2 bg-blue-600 rounded-full font-black"></div>
+                                                <h2 className="text-2xl md:text-3xl font-black uppercase text-slate-900 font-black">{tech.title}</h2>
+                                            </div>
+                                            <p className="text-slate-600 text-lg leading-relaxed mb-8 font-medium">
+                                                {tech.desc}
+                                            </p>
+                                            <div className="bg-slate-50 p-6 rounded-2xl flex flex-col justify-center gap-4 font-black">
+                                                <h5 className="font-black text-blue-600 text-xs uppercase tracking-widest font-black">{t.sectors.source}</h5>
+                                                <div className="flex flex-wrap gap-x-8 gap-y-4 font-black">
+                                                    {tech.sources.map((s, si) => (
+                                                        <a key={si} href={s.url} target="_blank" className="text-[10px] font-bold text-slate-900 underline hover:text-blue-600 flex items-center gap-1 uppercase font-black text-slate-900">
+                                                            {s.label} <i data-lucide="external-link" className="w-3 h-3 font-black"></i>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={`md:col-span-4 p-8 md:p-10 rounded-[2.5rem] text-white flex flex-col justify-center font-black ${tech.color}`}>
+                                            <h4 className="font-black text-lg md:text-xl mb-4 uppercase font-black">{t.sectors.value_core}</h4>
+                                            <ul className="space-y-4 text-sm font-bold font-black">
+                                                {tech.points.map((p, pi) => <li key={pi} className="font-black">• {p}</li>)}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                );
+            };
+
+            return (
+                <div lang={lang} className="min-h-screen text-slate-900 text-left bg-white font-medium">
+                    {/* Success Modal */}
+                    {isSubmitted && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                            <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl relative font-black">
+                                <button onClick={() => setIsSubmitted(false)} className="absolute right-6 top-6 text-slate-400 hover:text-slate-600 transition-colors font-black"><i data-lucide="x" className="w-6 h-6 text-left"></i></button>
+                                <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-center font-black text-green-500"><i data-lucide="check-circle-2" className="w-10 h-10 text-center font-black text-green-500"></i></div>
+                                <h3 className="text-2xl font-black mb-4 font-black text-slate-900 text-center">{t.contact.success_title}</h3>
+                                <p className="text-slate-500 font-medium mb-8 leading-relaxed text-center text-slate-500 font-black">{t.contact.success_p}</p>
+                                <button onClick={() => setIsSubmitted(false)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black hover:bg-blue-600 transition-all shadow-lg font-black text-white">回到首頁</button>
+                            </div>
+                        </div>
+                    )}
+
+                    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled || currentPage !== 'home' ? 'bg-white shadow-xl py-3' : 'bg-transparent py-5'} text-left text-slate-900 font-black`}>
+                        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-left font-black">
+                            <div className="flex items-center gap-2 cursor-pointer font-black" onClick={() => { setCurrentPage('home'); scrollToTop(); }}>
+                                <img src="COOP_blue.png" alt="COOP" className="h-12 md:h-16 w-auto text-left font-black" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/160x50/transparent/0052cc?text=COOP'; }} />
+                            </div>
+                            <div className={`hidden lg:flex items-center gap-6 lg:gap-10 text-sm font-bold uppercase tracking-widest ${scrolled || currentPage !== 'home' ? 'text-slate-600' : 'text-white'} text-left`}>
+                                <button onClick={() => { setCurrentPage('home'); scrollToTop(); }} className="hover:text-blue-600 transition-colors font-black">{t.nav.about}</button>
+                                <button onClick={() => { setCurrentPage('home'); setTimeout(() => scrollToSection('capabilities'), 100); }} className="hover:text-blue-600 transition-colors font-black">{t.nav.capabilities}</button>
+                                <button onClick={() => { setCurrentPage('home'); setTimeout(() => scrollToSection('solutions'), 100); }} className="hover:text-blue-600 transition-colors font-black">{t.nav.solutions}</button>
+                                <button onClick={() => { setCurrentPage('home'); setTimeout(() => scrollToSection('cases'), 100); }} className="hover:text-blue-600 transition-colors font-black">{t.nav.cases}</button>
+                                <button onClick={() => { if(currentPage === 'home') { scrollToSection('sectors-home'); } else { setCurrentPage('home'); setTimeout(() => scrollToSection('sectors-home'), 100); } }} className="hover:text-blue-600 transition-colors font-black">{t.nav.sectors}</button>
+                                
+                                <div className="flex items-center border border-white/20 bg-black/10 rounded-full px-3 py-1 gap-2 text-[10px] font-black">
+                                    <button onClick={() => setLang('zh-Hant')} className={`transition-all font-black ${lang === 'zh-Hant' ? 'text-blue-400' : 'text-white opacity-60 hover:opacity-100'}`}>ZH</button>
+                                    <span className="opacity-20 text-white font-black">|</span>
+                                    <button onClick={() => setLang('zh-Hans')} className={`transition-all font-black ${lang === 'zh-Hans' ? 'text-blue-400' : 'text-white opacity-60 hover:opacity-100'}`}>CN</button>
+                                    <span className="opacity-20 text-white font-black">|</span>
+                                    <button onClick={() => setLang('en')} className={`transition-all font-black ${lang === 'en' ? 'text-blue-400' : 'text-white opacity-60 hover:opacity-100'}`}>EN</button>
+                                </div>
+
+                                <button onClick={() => scrollToSection('contact')} className="bg-slate-900 text-white px-6 py-2.5 rounded-full hover:bg-blue-600 transition-all font-black shadow-lg">{t.nav.contact}</button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {currentPage === 'home' ? <HomePage /> : <SectorsPage />}
+
+                    <section id="contact" className="py-20 bg-white border-t border-slate-50 text-left text-slate-900 font-black">
+                        <div className="max-w-7xl mx-auto px-6 text-left text-slate-900 font-black">
+                            <div className="bg-slate-50 rounded-[4rem] overflow-hidden grid md:grid-cols-2 shadow-sm border border-slate-100 text-left font-black">
+                                <div className="p-10 md:p-16 bg-blue-600 text-white flex flex-col justify-between text-left font-black">
+                                    <div className="text-left text-white font-black">
+                                        <h3 className="text-3xl md:text-4xl font-black mb-8 leading-tight font-black text-white">{t.contact.title}</h3>
+                                        <p className="text-blue-100 text-lg mb-12 max-w-sm font-medium font-black">{t.contact.p}</p>
+                                    </div>
+                                    <div className="space-y-6 text-left font-black">
+                                        <div className="flex items-center gap-4 text-left font-black"><div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shadow-inner text-white font-black"><i data-lucide="mail" className="w-5 h-5 text-white"></i></div><span className="font-bold text-white text-sm font-black">info@coop-china.com</span></div>
+                                        <div className="flex items-center gap-4 text-left text-white font-black"><div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shadow-inner text-white font-black"><i data-lucide="map-pin" className="w-5 h-5 text-white font-black"></i></div><span className="font-bold text-sm text-left text-white font-black tracking-widest">{t.footer.addr}</span></div>
+                                    </div>
+                                </div>
+                                <div className="p-10 md:p-16 bg-white text-left text-slate-900 font-black">
+                                    <form className="space-y-6 text-left font-black" onSubmit={handleFormSubmit}>
+                                        {errorStatus && <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-3 text-sm font-bold shadow-sm animate-in fade-in font-black"> <i data-lucide="alert-circle" className="w-5 h-5"></i> {errorStatus}</div>}
+                                        <div className="text-left font-black">
+                                            <label className="text-xs font-black uppercase text-slate-400 mb-2 block tracking-widest font-black">{t.contact.name}</label>
+                                            <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 outline-none focus:border-blue-600 font-bold transition-all shadow-inner text-slate-900" />
+                                        </div>
+                                        <div className="text-left font-black">
+                                            <label className="text-xs font-black uppercase text-slate-400 mb-2 block tracking-widest font-black">{t.contact.email}</label>
+                                            <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 outline-none focus:border-blue-600 font-bold transition-all shadow-inner text-slate-900" />
+                                        </div>
+                                        <div className="text-left font-black">
+                                            <label className="text-xs font-black uppercase text-slate-400 mb-2 block tracking-widest text-left font-black">{t.contact.req}</label>
+                                            <textarea required value={formData.requirement} onChange={(e) => setFormData({...formData, requirement: e.target.value})} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-5 py-3 outline-none focus:border-blue-600 font-bold h-32 transition-all shadow-inner text-slate-900" placeholder={t.contact.placeholder}></textarea>
+                                        </div>
+                                        <button type="submit" disabled={isSubmitting} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-3 disabled:bg-slate-400 shadow-xl shadow-slate-200 font-black">
+                                            {isSubmitting ? <><i className="w-5 h-5 animate-spin border-2 border-white/30 border-t-white rounded-full font-black"></i> {t.contact.submitting}</> : t.contact.submit}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <footer className="bg-white border-t border-slate-100 py-12 text-left text-slate-900 font-black">
+                        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left font-black">
+                            <img src="COOP_blue.png" alt="COOP" className="h-14 w-auto opacity-90 text-left font-black" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/140x45/transparent/0052cc?text=COOP'; }} />
+                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] font-black">{t.footer.rights}</p>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-black">{t.footer.addr}</div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
